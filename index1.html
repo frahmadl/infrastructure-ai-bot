@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شات بوت الاستعلام عن السيرفرات</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 85vh;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #0078d4;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-color: #faf9f8;
+        }
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            line-height: 1.5;
+            font-size: 14px;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #0078d4;
+            color: white;
+            align-self: flex-start;
+            border-bottom-right-radius: 0;
+        }
+        .bot-message {
+            background-color: #e1dfdd;
+            color: #323130;
+            align-self: flex-end;
+            border-bottom-left-radius: 0;
+            white-space: pre-wrap;
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 12px;
+            background-color: #ffffff;
+            border-top: 1px solid #edebe9;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #8a8886;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+        }
+        .chat-input-area input:focus {
+            border-color: #0078d4;
+        }
+        .chat-input-area button {
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            margin-right: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .chat-input-area button:hover {
+            background-color: #106ebe;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            🤖 مساعد البنية التحتية الذكي
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">أهلاً بك! أنا جاهز للإجابة عن استفسارات السيرفرات والبيئات. تفضل بطرح سؤالك.</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="اكتب سؤالك هنا (مثال: ابحث عن السيرفرات)..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">إرسال</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/api/query";
+
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const query = inputField.value.trim();
+            if (!query) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+
+            // عرض رسالة المستخدم
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'message user-message';
+            userMsgDiv.textContent = query;
+            chatMessages.appendChild(userMsgDiv);
+
+            inputField.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // رسالة الانتظار من البوت
+            const botMsgDiv = document.createElement('div');
+            botMsgDiv.className = 'message bot-message';
+            botMsgDiv.textContent = "جاري المعالجة والبحث...";
+            chatMessages.appendChild(botMsgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: query })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const count = result.results_count;
+                    const data = result.data;
+
+                    let reply = `عدد النتائج المعثور عليها: ${count}\n`;
+                    if (count > 0 && data.length > 0) {
+                        reply += "\nأبرز النتائج:\n" + JSON.stringify(data[0], null, 2);
+                    } else {
+                        reply += "\nلم يتم العثور على مطابقات مباشرة في البيانات الحالية.";
+                    }
+                    botMsgDiv.textContent = reply;
+                } else {
+                    botMsgDiv.textContent = "حدث خطأ أثناء الاتصال بالخادم الداخلي.";
+                }
+            } catch (error) {
+                botMsgDiv.textContent = "تعذر الاتصال بالخادم. تأكد من تشغيل FastAPI.";
+            }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+
+</body>
+</html>
