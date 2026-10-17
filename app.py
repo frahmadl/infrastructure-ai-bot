@@ -1,6 +1,7 @@
 import os
 import json
 from fastapi import FastAPI, HTTPException, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import pandas as pd
 from openai import OpenAI
@@ -32,7 +33,7 @@ class QueryRequest(BaseModel):
 
 @app.get("/")
 def home():
-    return {"message": "Infrastructure Inquiry Bot Running"}
+    return FileResponse("index1.html")
 
 
 @app.get("/api/stats")
