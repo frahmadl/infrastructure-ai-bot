@@ -31,3 +31,14 @@
 
 ```bash
 pip install fastapi uvicorn pandas openpyxl python-dotenv openai
+
+## 👩‍💻 فريق المطورين (Developers)
+
+تم تطوير هذا المشروع بواسطة فريق العمل:
+
+* **فجر**
+* **الجوهره**
+* **شجون**
+* **وسن**
+* **ابرار**
+* **يارا**
